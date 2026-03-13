@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;500;600;700;800&display=swap");
+
+@layer base {
+  :root {
+    --font-sans: "DM Sans", system-ui, sans-serif;
+    --font-display: "Outfit", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", monospace;
+
+    --background: 0 0% 99%;
+    --foreground: 160 10% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 160 10% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 160 10% 10%;
+    --primary: 155 60% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 155 15% 94%;
+    --secondary-foreground: 155 10% 25%;
+    --muted: 150 10% 96%;
+    --muted-foreground: 150 5% 45%;
+    --accent: 150 15% 94%;
+    --accent-foreground: 155 10% 25%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 150 10% 90%;
+    --input: 150 10% 90%;
+    --ring: 155 60% 40%;
+    --radius: 0.625rem;
+
+    --sidebar: 150 10% 98%;
+    --sidebar-foreground: 160 10% 10%;
+
+    --tree: 0 0% 100%;
+    --tree-line: 150 10% 88%;
+    --tree-hover: 150 15% 96%;
+    --tree-selected: 155 40% 93%;
+  }
+
+  .dark {
+    --background: 160 10% 6%;
+    --foreground: 150 10% 92%;
+    --card: 160 10% 8%;
+    --card-foreground: 150 10% 92%;
+    --popover: 160 10% 8%;
+    --popover-foreground: 150 10% 92%;
+    --primary: 155 55% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 155 10% 14%;
+    --secondary-foreground: 150 10% 80%;
+    --muted: 155 10% 12%;
+    --muted-foreground: 150 5% 55%;
+    --accent: 155 10% 14%;
+    --accent-foreground: 150 10% 80%;
+    --destructive: 0 62% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 155 8% 16%;
+    --input: 155 8% 16%;
+    --ring: 155 55% 45%;
+
+    --sidebar: 160 10% 7%;
+    --sidebar-foreground: 150 10% 88%;
+
+    --tree: 160 10% 8%;
+    --tree-line: 155 8% 18%;
+    --tree-hover: 155 10% 12%;
+    --tree-selected: 155 30% 15%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
+}
