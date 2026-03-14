@@ -4,10 +4,10 @@ import { Logo } from "@/components/shared/Logo";
 import { AuthForm } from "@/components/auth/AuthForm";
 
 export const metadata: Metadata = {
-  title: "Sign In",
+  title: "Create Account",
 };
 
-export default function LoginPage() {
+export default function SignUpPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
@@ -15,19 +15,19 @@ export default function LoginPage() {
           <Logo size="lg" />
 
           <h1 className="mt-8 text-center font-display text-2xl font-bold text-foreground">
-            Welcome to DriveTree
+            Create your account
           </h1>
           <p className="mt-2 text-center text-sm text-muted-foreground">
-            Sign in to manage your Google Drive.
+            Start organizing your Google Drive today.
           </p>
         </div>
 
         <div className="mt-8">
-          <AuthForm mode="login" />
+          <AuthForm mode="signup" />
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          By signing in, you agree to our{" "}
+          By creating an account, you agree to our{" "}
           <Link
             href="/legal/terms"
             className="underline underline-offset-2 hover:text-foreground"

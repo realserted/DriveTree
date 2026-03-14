@@ -3,7 +3,7 @@
 -- ============================================================
 
 -- 1. User profiles (extends Supabase auth.users)
-CREATE TABLE public.profiles (
+CREATE TABLE public.drivetree_profiles (
   id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
   email TEXT NOT NULL,
   full_name TEXT,
@@ -13,9 +13,9 @@ CREATE TABLE public.profiles (
 );
 
 -- 2. Connected Google Drive accounts
-CREATE TABLE public.connected_drives (
+CREATE TABLE public.drivetree_connected_drives (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES public.drivetree_profiles(id) ON DELETE CASCADE NOT NULL,
   google_email TEXT NOT NULL,
   access_token TEXT,
   refresh_token TEXT,
@@ -27,9 +27,9 @@ CREATE TABLE public.connected_drives (
 );
 
 -- 3. Subscriptions
-CREATE TABLE public.subscriptions (
+CREATE TABLE public.drivetree_subscriptions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL UNIQUE,
+  user_id UUID REFERENCES public.drivetree_profiles(id) ON DELETE CASCADE NOT NULL UNIQUE,
   plan TEXT DEFAULT 'early_access' CHECK (plan IN ('early_access', 'free', 'pro', 'team')),
   status TEXT DEFAULT 'active' CHECK (status IN ('active', 'cancelled', 'past_due', 'trialing')),
   price_cents INTEGER DEFAULT 100,
@@ -42,39 +42,39 @@ CREATE TABLE public.subscriptions (
 -- Row Level Security
 -- ============================================================
 
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.connected_drives ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.drivetree_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.drivetree_connected_drives ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.drivetree_subscriptions ENABLE ROW LEVEL SECURITY;
 
 -- Profiles
 CREATE POLICY "Users can view own profile"
-  ON public.profiles FOR SELECT
+  ON public.drivetree_profiles FOR SELECT
   USING (auth.uid() = id);
 
 CREATE POLICY "Users can update own profile"
-  ON public.profiles FOR UPDATE
+  ON public.drivetree_profiles FOR UPDATE
   USING (auth.uid() = id);
 
 -- Connected Drives
 CREATE POLICY "Users can view own drives"
-  ON public.connected_drives FOR SELECT
+  ON public.drivetree_connected_drives FOR SELECT
   USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can insert own drives"
-  ON public.connected_drives FOR INSERT
+  ON public.drivetree_connected_drives FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can update own drives"
-  ON public.connected_drives FOR UPDATE
+  ON public.drivetree_connected_drives FOR UPDATE
   USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can delete own drives"
-  ON public.connected_drives FOR DELETE
+  ON public.drivetree_connected_drives FOR DELETE
   USING (auth.uid() = user_id);
 
 -- Subscriptions
 CREATE POLICY "Users can view own subscription"
-  ON public.subscriptions FOR SELECT
+  ON public.drivetree_subscriptions FOR SELECT
   USING (auth.uid() = user_id);
 
 -- ============================================================
@@ -84,7 +84,7 @@ CREATE POLICY "Users can view own subscription"
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, full_name, avatar_url)
+  INSERT INTO public.drivetree_profiles (id, email, full_name, avatar_url)
   VALUES (
     NEW.id,
     NEW.email,
@@ -103,6 +103,6 @@ CREATE TRIGGER on_auth_user_created
 -- Indexes
 -- ============================================================
 
-CREATE INDEX idx_connected_drives_user_id ON public.connected_drives(user_id);
-CREATE INDEX idx_connected_drives_active ON public.connected_drives(user_id, is_active);
-CREATE INDEX idx_subscriptions_user_id ON public.subscriptions(user_id);
+CREATE INDEX idx_drivetree_connected_drives_user_id ON public.drivetree_connected_drives(user_id);
+CREATE INDEX idx_drivetree_connected_drives_active ON public.drivetree_connected_drives(user_id, is_active);
+CREATE INDEX idx_drivetree_subscriptions_user_id ON public.drivetree_subscriptions(user_id);

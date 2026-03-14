@@ -18,7 +18,7 @@ export default function DashboardPage() {
     const supabase = createClient();
 
     supabase
-      .from("connected_drives")
+      .from("drivetree_connected_drives")
       .select("id, user_id, google_email, is_active, connected_at, last_synced_at")
       .eq("user_id", user.id)
       .then(({ data }) => {
@@ -29,7 +29,7 @@ export default function DashboardPage() {
 
   async function handleDisconnect(driveId: string) {
     const supabase = createClient();
-    await supabase.from("connected_drives").delete().eq("id", driveId);
+    await supabase.from("drivetree_connected_drives").delete().eq("id", driveId);
     setDrives((prev) => prev.filter((d) => d.id !== driveId));
   }
 

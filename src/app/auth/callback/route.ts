@@ -17,7 +17,7 @@ export async function GET(request: Request) {
 
       if (providerToken) {
         // Upsert the connected drive record
-        await supabase.from("connected_drives").upsert(
+        await supabase.from("drivetree_connected_drives").upsert(
           {
             user_id: user.id,
             google_email: user.email!,

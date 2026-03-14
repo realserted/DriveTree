@@ -17,8 +17,8 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Redirect authenticated users away from /login
-  if (pathname === "/login" && session) {
+  // Redirect authenticated users away from login/signup pages
+  if ((pathname === "/login" || pathname.startsWith("/auth/sign-up") || pathname.startsWith("/auth/forgot-password")) && session) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 

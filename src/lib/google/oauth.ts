@@ -4,7 +4,7 @@ export async function getAccessToken(userId: string): Promise<string | null> {
   const supabase = createServerSupabaseClient();
 
   const { data: drive } = await supabase
-    .from("connected_drives")
+    .from("drivetree_connected_drives")
     .select("access_token, refresh_token, token_expires_at")
     .eq("user_id", userId)
     .eq("is_active", true)
@@ -41,7 +41,7 @@ export async function getAccessToken(userId: string): Promise<string | null> {
     const newExpiresAt = new Date(Date.now() + tokens.expires_in * 1000);
 
     await supabase
-      .from("connected_drives")
+      .from("drivetree_connected_drives")
       .update({
         access_token: tokens.access_token,
         token_expires_at: newExpiresAt.toISOString(),
