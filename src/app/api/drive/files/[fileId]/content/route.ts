@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getAccessToken } from "@/lib/google/oauth";
-import { getFileContent } from "@/lib/google/drive";
+import { getFileContent, exportFile, getExportMimeType } from "@/lib/google/drive";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: { fileId: string } }
 ) {
   const supabase = createServerSupabaseClient();
@@ -24,8 +24,14 @@ export async function GET(
     );
   }
 
+  const mimeType = request.nextUrl.searchParams.get("mimeType") || "";
+
   try {
-    const response = await getFileContent(accessToken, params.fileId);
+    // Google Workspace files need to be exported, not downloaded
+    const exportMime = getExportMimeType(mimeType);
+    const response = exportMime
+      ? await exportFile(accessToken, params.fileId, exportMime)
+      : await getFileContent(accessToken, params.fileId);
 
     if (!response.ok) {
       return NextResponse.json(

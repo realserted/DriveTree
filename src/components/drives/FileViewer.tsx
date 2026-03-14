@@ -14,23 +14,28 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { useFilePreview } from "@/hooks/useFilePreview";
 import { formatBytes, formatDate } from "@/lib/utils";
 import type { DriveFile } from "@/types/drive";
-import { isGoogleDoc, isImage, isPdf, isText } from "@/types/drive";
-import { getPreviewUrl } from "@/lib/google/drive";
+import { isGoogleDoc, isImage, isPdf, isText, isOfficeDoc } from "@/types/drive";
 
 interface FileViewerProps {
   file: DriveFile | null;
 }
 
+function isPreviewable(file: DriveFile): boolean {
+  return isGoogleDoc(file) || isOfficeDoc(file) || isPdf(file) || isImage(file) || isText(file);
+}
+
 export function FileViewer({ file }: FileViewerProps) {
-  const { textContent, loading, fetchTextContent, clearContent } =
+  const { content, blobUrl, previewType, loading, fetchPreview, clearContent } =
     useFilePreview();
 
+  const fileId = file?.id;
   useEffect(() => {
     clearContent();
-    if (file && isText(file)) {
-      fetchTextContent(file);
+    if (file && isPreviewable(file)) {
+      fetchPreview(file);
     }
-  }, [file, fetchTextContent, clearContent]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fileId]);
 
   if (!file) {
     return (
@@ -44,8 +49,6 @@ export function FileViewer({ file }: FileViewerProps) {
       </div>
     );
   }
-
-  const previewUrl = getPreviewUrl(file);
 
   return (
     <div className="flex h-full flex-col">
@@ -102,35 +105,40 @@ export function FileViewer({ file }: FileViewerProps) {
 
       {/* Preview content */}
       <div className="flex-1 overflow-hidden">
-        {/* Google Docs / PDF — iframe embed */}
-        {(isGoogleDoc(file) || isPdf(file)) && previewUrl ? (
+        {loading ? (
+          <LoadingSpinner className="py-12" text="Loading preview..." />
+        ) : previewType === "html" && content ? (
+          /* Google Docs/Sheets/Slides exported as HTML */
+          <ScrollArea className="h-full bg-white">
+            <div
+              className="prose prose-sm max-w-none p-6 text-black [&_a]:text-blue-600"
+              dangerouslySetInnerHTML={{ __html: content }}
+            />
+          </ScrollArea>
+        ) : previewType === "pdf" && blobUrl ? (
+          /* PDF rendered from blob */
           <iframe
-            src={previewUrl}
+            src={blobUrl}
             className="h-full w-full border-0"
             title={file.name}
-            sandbox="allow-scripts allow-same-origin"
           />
-        ) : /* Images */
-        isImage(file) ? (
+        ) : previewType === "image" && blobUrl ? (
+          /* Images rendered from blob */
           <div className="flex h-full items-center justify-center bg-muted/20 p-8">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={file.thumbnailLink?.replace("=s220", "=s800") || ""}
+              src={blobUrl}
               alt={file.name}
               className="max-h-full max-w-full rounded-md object-contain shadow-lg"
             />
           </div>
-        ) : /* Text files */
-        isText(file) ? (
-          loading ? (
-            <LoadingSpinner className="py-12" text="Loading file content..." />
-          ) : (
-            <ScrollArea className="h-full">
-              <pre className="whitespace-pre-wrap p-4 font-mono text-sm text-foreground">
-                {textContent || "Unable to load file content."}
-              </pre>
-            </ScrollArea>
-          )
+        ) : previewType === "text" && content ? (
+          /* Text/code files */
+          <ScrollArea className="h-full">
+            <pre className="whitespace-pre-wrap p-4 font-mono text-sm text-foreground">
+              {content}
+            </pre>
+          </ScrollArea>
         ) : (
           /* Unsupported format */
           <div className="flex h-full flex-col items-center justify-center gap-4 text-center">

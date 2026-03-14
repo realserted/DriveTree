@@ -33,6 +33,18 @@ export function isGoogleDoc(file: DriveFile): boolean {
   );
 }
 
+export function isOfficeDoc(file: DriveFile): boolean {
+  const officeTypes = [
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",       // .xlsx
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation", // .pptx
+    "application/msword",                    // .doc
+    "application/vnd.ms-excel",              // .xls
+    "application/vnd.ms-powerpoint",         // .ppt
+  ];
+  return officeTypes.includes(file.mimeType);
+}
+
 export function isImage(file: DriveFile): boolean {
   return file.mimeType.startsWith("image/");
 }

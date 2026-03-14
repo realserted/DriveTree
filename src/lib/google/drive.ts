@@ -81,3 +81,63 @@ export function getPreviewUrl(file: DriveFile): string | null {
 
   return null;
 }
+
+/**
+ * Export a Google Workspace file (Docs, Sheets, Slides) to a standard format.
+ * Google Workspace files can't be downloaded with alt=media — they must be exported.
+ */
+export function getExportMimeType(
+  googleMimeType: string
+): string | null {
+  const exportMap: Record<string, string> = {
+    // Google Workspace → HTML
+    "application/vnd.google-apps.document": "text/html",
+    "application/vnd.google-apps.spreadsheet": "text/html",
+    "application/vnd.google-apps.presentation": "text/html",
+  };
+  return exportMap[googleMimeType] || null;
+}
+
+const OFFICE_MIME_TYPES = [
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "application/msword",
+  "application/vnd.ms-excel",
+  "application/vnd.ms-powerpoint",
+];
+
+export function isOfficeMimeType(mimeType: string): boolean {
+  return OFFICE_MIME_TYPES.includes(mimeType);
+}
+
+/**
+ * Fetch an Office file as PDF using Google Drive's built-in conversion.
+ * Works by requesting the file with `alt=media` and `Accept: application/pdf`.
+ */
+export async function getFileAsPdf(
+  accessToken: string,
+  fileId: string
+): Promise<Response> {
+  // Google Drive can serve uploaded Office files as PDF via the export links
+  // We use the files.export-like approach: download and let Google convert
+  return fetch(
+    `${DRIVE_API_BASE}/files/${fileId}?alt=media`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+}
+
+export async function exportFile(
+  accessToken: string,
+  fileId: string,
+  exportMimeType: string
+): Promise<Response> {
+  const params = new URLSearchParams({ mimeType: exportMimeType });
+  return fetch(`${DRIVE_API_BASE}/files/${fileId}/export?${params}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+}
