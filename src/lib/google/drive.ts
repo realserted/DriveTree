@@ -131,6 +131,61 @@ export async function getFileAsPdf(
   );
 }
 
+/**
+ * Copy a file and convert it to a Google Workspace format.
+ * Returns the new file's ID.
+ */
+export async function copyAsGoogle(
+  accessToken: string,
+  fileId: string,
+  googleMimeType: string
+): Promise<string> {
+  const res = await fetch(`${DRIVE_API_BASE}/files/${fileId}/copy`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ mimeType: googleMimeType }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `Copy failed: ${res.status}`);
+  }
+
+  const data = await res.json();
+  return data.id;
+}
+
+/**
+ * Permanently delete a file (used for temp conversion copies).
+ */
+export async function deleteFile(
+  accessToken: string,
+  fileId: string
+): Promise<void> {
+  await fetch(`${DRIVE_API_BASE}/files/${fileId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+}
+
+/** Map Office MIME types to the Google Workspace type they convert to. */
+export function getGoogleMimeForOffice(mimeType: string): string | null {
+  const map: Record<string, string> = {
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+      "application/vnd.google-apps.presentation",
+    "application/vnd.ms-powerpoint":
+      "application/vnd.google-apps.presentation",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+      "application/vnd.google-apps.spreadsheet",
+    "application/vnd.ms-excel":
+      "application/vnd.google-apps.spreadsheet",
+  };
+  return map[mimeType] || null;
+}
+
 export async function exportFile(
   accessToken: string,
   fileId: string,

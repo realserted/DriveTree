@@ -80,7 +80,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
-        scopes: "https://www.googleapis.com/auth/drive.readonly",
+        scopes: "https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/presentations.readonly",
         queryParams: {
           access_type: "offline",
           prompt: "consent",

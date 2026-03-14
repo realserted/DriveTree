@@ -45,6 +45,10 @@ export function isOfficeDoc(file: DriveFile): boolean {
   return officeTypes.includes(file.mimeType);
 }
 
+export function isVideo(file: DriveFile): boolean {
+  return file.mimeType.startsWith("video/");
+}
+
 export function isImage(file: DriveFile): boolean {
   return file.mimeType.startsWith("image/");
 }

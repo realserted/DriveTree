@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getAccessToken } from "@/lib/google/oauth";
-import { getFileContent, exportFile, getExportMimeType } from "@/lib/google/drive";
+import {
+  getFileContent,
+  exportFile,
+  getExportMimeType,
+  copyAsGoogle,
+  deleteFile,
+  getGoogleMimeForOffice,
+} from "@/lib/google/drive";
 
 export async function GET(
   request: NextRequest,
@@ -25,8 +32,42 @@ export async function GET(
   }
 
   const mimeType = request.nextUrl.searchParams.get("mimeType") || "";
+  const format = request.nextUrl.searchParams.get("format") || "";
 
   try {
+    // Office files requested as PDF: copy → convert to Google format → export as PDF → delete copy
+    if (format === "pdf") {
+      const googleMime = getGoogleMimeForOffice(mimeType);
+      console.log("[content] format=pdf, mimeType=", mimeType, "googleMime=", googleMime);
+      if (googleMime) {
+        let tempId: string | null = null;
+        try {
+          tempId = await copyAsGoogle(accessToken, params.fileId, googleMime);
+          const pdfRes = await exportFile(accessToken, tempId, "application/pdf");
+
+          if (!pdfRes.ok) {
+            return NextResponse.json(
+              { error: "Failed to export as PDF" },
+              { status: pdfRes.status }
+            );
+          }
+
+          const body = await pdfRes.arrayBuffer();
+          return new NextResponse(body, {
+            headers: {
+              "Content-Type": "application/pdf",
+              "Cache-Control": "private, max-age=300",
+            },
+          });
+        } finally {
+          // Always clean up the temp file
+          if (tempId) {
+            deleteFile(accessToken, tempId).catch(() => {});
+          }
+        }
+      }
+    }
+
     // Google Workspace files need to be exported, not downloaded
     const exportMime = getExportMimeType(mimeType);
     const response = exportMime

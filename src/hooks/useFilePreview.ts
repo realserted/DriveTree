@@ -3,9 +3,14 @@
 import { useState, useCallback, useRef } from "react";
 import mammoth from "mammoth";
 import type { DriveFile } from "@/types/drive";
-import { isText, isGoogleDoc, isPdf, isImage, isOfficeDoc } from "@/types/drive";
+import { isText, isGoogleDoc, isPdf, isImage, isOfficeDoc, isVideo } from "@/types/drive";
 
-export type PreviewType = "text" | "html" | "pdf" | "image" | null;
+export type PreviewType = "text" | "html" | "pdf" | "image" | "video" | "iframe" | null;
+
+const WORD_MIMES = [
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/msword",
+];
 
 export function useFilePreview() {
   const [content, setContent] = useState<string | null>(null);
@@ -35,6 +40,43 @@ export function useFilePreview() {
     setPreviewType(null);
 
     try {
+      // .pptx/.xlsx/.xls/.ppt — convert to PDF server-side for slide navigation
+      if (isOfficeDoc(file) && !WORD_MIMES.includes(file.mimeType)) {
+        const pdfUrl = `/api/drive/files/${file.id}/content?mimeType=${encodeURIComponent(file.mimeType)}&format=pdf`;
+        const res = await fetch(pdfUrl);
+        if (res.ok) {
+          const blob = await res.blob();
+          const objectUrl = URL.createObjectURL(blob);
+          blobUrlRef.current = objectUrl;
+          setBlobUrl(objectUrl);
+          setPreviewType("pdf");
+        } else {
+          // Fallback to thumbnail if conversion fails
+          const thumbRes = await fetch(`/api/drive/files/${file.id}/thumbnail`);
+          if (thumbRes.ok) {
+            const blob = await thumbRes.blob();
+            const objectUrl = URL.createObjectURL(blob);
+            blobUrlRef.current = objectUrl;
+            setBlobUrl(objectUrl);
+            setPreviewType("image");
+          }
+        }
+        return;
+      }
+
+      // Video — fetch blob and use <video> tag
+      if (isVideo(file)) {
+        const url = `/api/drive/files/${file.id}/content?mimeType=${encodeURIComponent(file.mimeType)}`;
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const blob = await res.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        blobUrlRef.current = objectUrl;
+        setBlobUrl(objectUrl);
+        setPreviewType("video");
+        return;
+      }
+
       const url = `/api/drive/files/${file.id}/content?mimeType=${encodeURIComponent(file.mimeType)}`;
       const res = await fetch(url);
 
@@ -48,22 +90,11 @@ export function useFilePreview() {
         setContent(html);
         setPreviewType("html");
       } else if (isOfficeDoc(file)) {
-        // Convert .docx/.xlsx/.pptx to HTML client-side
+        // .docx/.doc — convert to HTML with mammoth
         const arrayBuffer = await res.arrayBuffer();
-        if (
-          file.mimeType ===
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-          file.mimeType === "application/msword"
-        ) {
-          const result = await mammoth.convertToHtml({ arrayBuffer });
-          setContent(result.value);
-          setPreviewType("html");
-        } else {
-          // For .xlsx/.pptx without a converter, show as PDF fallback
-          // or show "not available" — for now, signal html with a message
-          setContent(null);
-          setPreviewType(null);
-        }
+        const result = await mammoth.convertToHtml({ arrayBuffer });
+        setContent(result.value);
+        setPreviewType("html");
       } else if (isPdf(file)) {
         const blob = await res.blob();
         const objectUrl = URL.createObjectURL(blob);

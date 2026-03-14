@@ -14,14 +14,14 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { useFilePreview } from "@/hooks/useFilePreview";
 import { formatBytes, formatDate } from "@/lib/utils";
 import type { DriveFile } from "@/types/drive";
-import { isGoogleDoc, isImage, isPdf, isText, isOfficeDoc } from "@/types/drive";
+import { isGoogleDoc, isImage, isPdf, isText, isOfficeDoc, isVideo } from "@/types/drive";
 
 interface FileViewerProps {
   file: DriveFile | null;
 }
 
 function isPreviewable(file: DriveFile): boolean {
-  return isGoogleDoc(file) || isOfficeDoc(file) || isPdf(file) || isImage(file) || isText(file);
+  return isGoogleDoc(file) || isOfficeDoc(file) || isPdf(file) || isImage(file) || isText(file) || isVideo(file);
 }
 
 export function FileViewer({ file }: FileViewerProps) {
@@ -131,6 +131,17 @@ export function FileViewer({ file }: FileViewerProps) {
               alt={file.name}
               className="max-h-full max-w-full rounded-md object-contain shadow-lg"
             />
+          </div>
+        ) : previewType === "video" && blobUrl ? (
+          /* Video rendered from blob */
+          <div className="flex h-full items-center justify-center bg-black p-4">
+            <video
+              src={blobUrl}
+              controls
+              className="max-h-full max-w-full rounded-md"
+            >
+              Your browser does not support the video tag.
+            </video>
           </div>
         ) : previewType === "text" && content ? (
           /* Text/code files */
