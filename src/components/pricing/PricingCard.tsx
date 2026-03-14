@@ -29,21 +29,21 @@ export function PricingCard({
   return (
     <div
       className={cn(
-        "relative flex flex-col overflow-hidden rounded-2xl border p-8",
+        "relative flex flex-col rounded-2xl border p-8 transition-shadow duration-300",
         highlighted
-          ? "border-2 border-emerald-500/40 bg-card shadow-xl shadow-emerald-500/5"
-          : "border-border/60 bg-card"
+          ? "border-primary/30 bg-card shadow-xl shadow-primary/[0.03]"
+          : "border-border/60 bg-card hover:shadow-lg hover:shadow-black/[0.03]"
       )}
     >
       {badge && (
-        <div className="absolute right-0 top-0 rounded-bl-xl bg-emerald-500 px-3 py-1 text-xs font-bold text-white">
+        <div className="absolute right-4 top-4 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
           {badge}
         </div>
       )}
 
       <p className="text-sm font-medium text-muted-foreground">{name}</p>
 
-      <div className="mt-2 flex items-baseline gap-1">
+      <div className="mt-3 flex items-baseline gap-1">
         <span className="font-display text-5xl font-extrabold text-foreground">
           {price}
         </span>
@@ -52,10 +52,10 @@ export function PricingCard({
 
       <p className="mt-3 text-sm text-muted-foreground">{description}</p>
 
-      <ul className="mt-6 flex flex-1 flex-col gap-3">
+      <ul className="mt-8 flex flex-1 flex-col gap-3">
         {features.map((feat) => (
           <li key={feat} className="flex items-start gap-2.5 text-sm text-foreground">
-            <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+            <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             {feat}
           </li>
         ))}
@@ -66,7 +66,9 @@ export function PricingCard({
         size="lg"
         className={cn(
           "mt-8 w-full gap-2 rounded-full",
-          !highlighted && "bg-foreground text-background hover:bg-foreground/90"
+          highlighted
+            ? "shadow-lg shadow-primary/20"
+            : "bg-foreground text-background hover:bg-foreground/90"
         )}
       >
         <Link href={ctaHref}>

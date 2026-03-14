@@ -8,6 +8,25 @@ export const metadata: Metadata = {
   description: "Simple, transparent pricing. Start exploring your Drive for just $1.",
 };
 
+const faqs = [
+  {
+    q: "Do you store my files?",
+    a: "No. Your files stay on Google's servers. DriveTree only reads the folder structure and file metadata to display the tree. We never download or store your file contents.",
+  },
+  {
+    q: "Can I cancel anytime?",
+    a: "Yes, you can cancel your subscription at any time from your Settings page. You'll retain access until the end of your billing period.",
+  },
+  {
+    q: "What Google permissions do you need?",
+    a: "We request access to your Google Drive to read files and folder structure. We cannot share or permanently delete your files.",
+  },
+  {
+    q: "Will the price go up?",
+    a: "If you sign up during early access at $1/month, that price is locked for your account forever — even if we raise prices later.",
+  },
+];
+
 export default function PricingPage() {
   return (
     <>
@@ -15,12 +34,12 @@ export default function PricingPage() {
       <main className="py-20 sm:py-28">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           {/* Header */}
-          <div className="text-center">
-            <h1 className="font-display text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+          <div className="mx-auto max-w-2xl text-center">
+            <h1 className="font-display text-4xl font-bold tracking-tight text-balance text-foreground sm:text-5xl">
               Simple, Transparent Pricing
             </h1>
             <p className="mt-4 text-lg text-muted-foreground">
-              Start exploring your Drive for just $1.
+              Start exploring your Drive today. Upgrade when you need more.
             </p>
           </div>
 
@@ -59,34 +78,17 @@ export default function PricingPage() {
           </div>
 
           {/* FAQ */}
-          <div className="mx-auto mt-20 max-w-2xl">
+          <div className="mx-auto mt-24 max-w-2xl">
             <h2 className="text-center font-display text-2xl font-bold text-foreground">
               Frequently Asked Questions
             </h2>
-            <div className="mt-8 space-y-6">
-              {[
-                {
-                  q: "Do you store my files?",
-                  a: "No. Your files stay on Google's servers. DriveTree only reads the folder structure and file metadata to display the tree. We never download or store your file contents.",
-                },
-                {
-                  q: "Can I cancel anytime?",
-                  a: "Yes, you can cancel your subscription at any time from your Settings page. You'll retain access until the end of your billing period.",
-                },
-                {
-                  q: "What Google permissions do you need?",
-                  a: "We request read-only access to your Google Drive (drive.readonly scope). We cannot edit, delete, or share your files.",
-                },
-                {
-                  q: "Will the price go up?",
-                  a: "If you sign up during early access at $1/month, that price is locked for your account forever — even if we raise prices later.",
-                },
-              ].map((faq) => (
-                <div key={faq.q}>
+            <div className="mt-10 divide-y divide-border/60">
+              {faqs.map((faq) => (
+                <div key={faq.q} className="py-5">
                   <h3 className="text-sm font-semibold text-foreground">
                     {faq.q}
                   </h3>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                     {faq.a}
                   </p>
                 </div>

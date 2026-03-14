@@ -12,7 +12,7 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Logo />
 
@@ -27,17 +27,21 @@ export function Navbar() {
               {item.label}
             </Link>
           ))}
-          <div className="ml-3">
-            <Button asChild size="sm">
+          <div className="ml-4 flex items-center gap-2">
+            <Button asChild variant="ghost" size="sm">
               <Link href="/login">Sign In</Link>
+            </Button>
+            <Button asChild size="sm" className="rounded-full px-4">
+              <Link href="/auth/sign-up">Get Started</Link>
             </Button>
           </div>
         </div>
 
         {/* Mobile toggle */}
         <button
-          className="md:hidden rounded-md p-2 text-muted-foreground hover:text-foreground"
+          className="md:hidden rounded-md p-2 text-muted-foreground hover:text-foreground transition-colors"
           onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label="Toggle menu"
         >
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
@@ -61,9 +65,14 @@ export function Navbar() {
               {item.label}
             </Link>
           ))}
-          <Button asChild size="sm" className="mt-2 w-full">
-            <Link href="/login">Sign In</Link>
-          </Button>
+          <div className="mt-2 flex flex-col gap-2">
+            <Button asChild variant="outline" size="sm" className="w-full">
+              <Link href="/login">Sign In</Link>
+            </Button>
+            <Button asChild size="sm" className="w-full">
+              <Link href="/auth/sign-up">Get Started</Link>
+            </Button>
+          </div>
         </div>
       </div>
     </header>
