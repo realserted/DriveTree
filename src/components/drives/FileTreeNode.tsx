@@ -40,7 +40,7 @@ function getMimeIcon(mimeType: string) {
   if (mimeType === "application/pdf")
     return <FileText className="h-4 w-4 text-red-400" />;
   if (mimeType.startsWith("image/"))
-    return <Image className="h-4 w-4 text-purple-400" />;
+    return <Image className="h-4 w-4 text-purple-400" aria-hidden="true" />;
   return <File className="h-4 w-4 text-muted-foreground" />;
 }
 

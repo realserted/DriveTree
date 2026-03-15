@@ -56,7 +56,7 @@ function FileIcon({ icon }: { icon?: string }) {
     case "sheet":
       return <FileSpreadsheet className="h-4 w-4 text-emerald-500" />;
     case "image":
-      return <Image className="h-4 w-4 text-purple-400" />;
+      return <Image className="h-4 w-4 text-purple-400" aria-hidden="true" />;
     case "doc":
       return <FileText className="h-4 w-4 text-blue-400" />;
     case "slides":
@@ -149,7 +149,7 @@ export function FileTreeDemo() {
             </h2>
             <p className="mt-4 text-muted-foreground sm:text-lg leading-relaxed">
               Click a folder to expand it. Click a file to preview it.
-              Everything loads instantly from Google's servers.
+              Everything loads instantly from Google&apos;s servers.
             </p>
             <ul className="mt-8 space-y-3">
               {[
