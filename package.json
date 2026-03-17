@@ -20,6 +20,7 @@
     "@supabase/supabase-js": "^2.45.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
+    "dompurify": "^3.3.3",
     "lucide-react": "^0.383.0",
     "mammoth": "^1.12.0",
     "next": "^14.2.35",
@@ -30,6 +31,7 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
+    "@types/dompurify": "^3.0.5",
     "@types/node": "^20.14.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",

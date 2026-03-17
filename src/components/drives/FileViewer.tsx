@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import DOMPurify from "dompurify";
 import {
   FileText,
   ExternalLink,
@@ -27,6 +28,11 @@ function isPreviewable(file: DriveFile): boolean {
 export function FileViewer({ file }: FileViewerProps) {
   const { content, blobUrl, previewType, loading, fetchPreview, clearContent } =
     useFilePreview();
+
+  const sanitizedHtml = useMemo(
+    () => (content ? DOMPurify.sanitize(content) : ""),
+    [content]
+  );
 
   const fileId = file?.id;
   useEffect(() => {
@@ -112,7 +118,7 @@ export function FileViewer({ file }: FileViewerProps) {
           <ScrollArea className="h-full bg-white">
             <div
               className="prose prose-sm max-w-none p-6 text-black [&_a]:text-blue-600"
-              dangerouslySetInnerHTML={{ __html: content }}
+              dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
             />
           </ScrollArea>
         ) : previewType === "pdf" && blobUrl ? (

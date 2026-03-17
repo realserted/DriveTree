@@ -16,6 +16,11 @@ export async function GET(request: NextRequest) {
   const parentId =
     request.nextUrl.searchParams.get("parentId") || "root";
 
+  // Validate parentId to prevent Drive API query injection
+  if (!/^[a-zA-Z0-9_-]+$/.test(parentId) && parentId !== "root") {
+    return NextResponse.json({ error: "Invalid parentId" }, { status: 400 });
+  }
+
   const accessToken = await getAccessToken(user.id);
   if (!accessToken) {
     return NextResponse.json(
@@ -28,8 +33,9 @@ export async function GET(request: NextRequest) {
     const data = await listFiles(accessToken, parentId);
     return NextResponse.json(data);
   } catch (err: any) {
+    console.error("[drive/files]", err);
     return NextResponse.json(
-      { error: err.message || "Failed to list files" },
+      { error: "Failed to list files" },
       { status: 500 }
     );
   }

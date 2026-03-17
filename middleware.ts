@@ -12,24 +12,24 @@ function isPublicRoute(pathname: string): boolean {
 export async function middleware(request: NextRequest) {
   const { supabase, response } = createMiddlewareClient(request);
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
 
   // Redirect authenticated users away from login/signup pages
-  if ((pathname === "/login" || pathname.startsWith("/auth/sign-up") || pathname.startsWith("/auth/forgot-password")) && session) {
+  if ((pathname === "/login" || pathname.startsWith("/auth/sign-up") || pathname.startsWith("/auth/forgot-password")) && user) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   // Protect /dashboard/* routes
-  if (pathname.startsWith("/dashboard") && !session) {
+  if (pathname.startsWith("/dashboard") && !user) {
     const loginUrl = new URL("/login", request.url);
     return NextResponse.redirect(loginUrl);
   }
 
   // Protect /api/drive/* routes
-  if (pathname.startsWith("/api/drive") && !session) {
+  if (pathname.startsWith("/api/drive") && !user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

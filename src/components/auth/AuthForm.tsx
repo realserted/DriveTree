@@ -34,8 +34,13 @@ export function AuthForm({ mode }: AuthFormProps) {
       return;
     }
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+
+    if (mode === "signup" && !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
+      setError("Password must include uppercase, lowercase, and a number.");
       return;
     }
 
@@ -46,7 +51,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth/callback`,
         },
       });
 
@@ -79,8 +84,8 @@ export function AuthForm({ mode }: AuthFormProps) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-        scopes: "https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/presentations.readonly",
+        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth/callback`,
+        scopes: "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/presentations.readonly",
         queryParams: {
           access_type: "offline",
           prompt: "consent",

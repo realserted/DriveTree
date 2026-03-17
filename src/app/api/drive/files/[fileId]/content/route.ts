@@ -23,6 +23,11 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Validate fileId format
+  if (!/^[a-zA-Z0-9_-]+$/.test(params.fileId)) {
+    return NextResponse.json({ error: "Invalid file ID" }, { status: 400 });
+  }
+
   const accessToken = await getAccessToken(user.id);
   if (!accessToken) {
     return NextResponse.json(
@@ -92,8 +97,9 @@ export async function GET(
       },
     });
   } catch (err: any) {
+    console.error("[drive/content]", err);
     return NextResponse.json(
-      { error: err.message || "Failed to get file content" },
+      { error: "Failed to get file content" },
       { status: 500 }
     );
   }

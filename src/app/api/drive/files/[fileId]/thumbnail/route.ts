@@ -17,6 +17,11 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Validate fileId format
+  if (!/^[a-zA-Z0-9_-]+$/.test(params.fileId)) {
+    return NextResponse.json({ error: "Invalid file ID" }, { status: 400 });
+  }
+
   const accessToken = await getAccessToken(user.id);
   if (!accessToken) {
     return NextResponse.json(
@@ -47,8 +52,12 @@ export async function GET(
       );
     }
 
-    // Fetch the actual thumbnail image (requires auth)
+    // Validate thumbnail URL to prevent SSRF — must be a Google domain
     const thumbUrl = data.thumbnailLink.replace(/=s\d+/, "=s1600");
+    const parsedUrl = new URL(thumbUrl);
+    if (!parsedUrl.hostname.endsWith(".googleusercontent.com") && !parsedUrl.hostname.endsWith(".google.com")) {
+      return NextResponse.json({ error: "Invalid thumbnail source" }, { status: 400 });
+    }
     const thumbRes = await fetch(thumbUrl, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
@@ -71,8 +80,9 @@ export async function GET(
       },
     });
   } catch (err: any) {
+    console.error("[drive/thumbnail]", err);
     return NextResponse.json(
-      { error: err.message || "Failed to get thumbnail" },
+      { error: "Failed to get thumbnail" },
       { status: 500 }
     );
   }
