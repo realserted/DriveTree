@@ -5,9 +5,10 @@ import { FolderTree } from "lucide-react";
 interface LogoProps {
   className?: string;
   size?: "sm" | "md" | "lg";
+  href?: string;
 }
 
-export function Logo({ className, size = "md" }: LogoProps) {
+export function Logo({ className, size = "md", href = "/" }: LogoProps) {
   const sizes = {
     sm: { icon: "h-5 w-5", text: "text-lg" },
     md: { icon: "h-6 w-6", text: "text-xl" },
@@ -15,7 +16,7 @@ export function Logo({ className, size = "md" }: LogoProps) {
   };
 
   return (
-    <Link href="/" className={cn("flex items-center gap-2 group", className)}>
+    <Link href={href} className={cn("flex items-center gap-2 group", className)}>
       <div className="relative">
         <FolderTree
           className={cn(

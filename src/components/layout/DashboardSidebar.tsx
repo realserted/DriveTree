@@ -23,7 +23,7 @@ export function DashboardSidebar() {
   return (
     <aside className="flex h-full w-64 flex-col border-r border-border/40 bg-sidebar">
       <div className="flex h-16 items-center px-5">
-        <Logo size="sm" />
+        <Logo size="sm" href="/dashboard" />
       </div>
 
       <Separator />

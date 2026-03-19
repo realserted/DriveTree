@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 import { Logo } from "@/components/shared/Logo";
 import { Button } from "@/components/ui/button";
 import { publicNav } from "@/config/nav";
@@ -10,6 +11,7 @@ import { cn } from "@/lib/utils";
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
@@ -28,6 +30,16 @@ export function Navbar() {
             </Link>
           ))}
           <div className="ml-4 flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            >
+              <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+              <span className="sr-only">Toggle theme</span>
+            </Button>
             <Button asChild variant="ghost" size="sm">
               <Link href="/login">Sign In</Link>
             </Button>
@@ -66,6 +78,16 @@ export function Navbar() {
             </Link>
           ))}
           <div className="mt-2 flex flex-col gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-start gap-2"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            >
+              <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Moon className="absolute ml-0 h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+              <span className="ml-5">{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+            </Button>
             <Button asChild variant="outline" size="sm" className="w-full">
               <Link href="/login">Sign In</Link>
             </Button>
