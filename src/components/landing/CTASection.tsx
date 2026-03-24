@@ -11,7 +11,7 @@ export function CTASection() {
       </div>
 
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="relative mx-auto max-w-3xl overflow-hidden rounded-3xl border border-border/40 bg-card/80 backdrop-blur-sm p-12 text-center shadow-xl shadow-black/[0.03] sm:p-16">
+        <div className="relative mx-auto max-w-3xl overflow-hidden rounded-3xl border border-border/50 bg-white dark:bg-card/80 backdrop-blur-sm p-12 text-center shadow-lg shadow-black/[0.04] sm:p-16">
           {/* Decorative gradient orbs */}
           <div className="absolute -left-20 -top-20 h-40 w-40 rounded-full bg-primary/5 blur-3xl" />
           <div className="absolute -bottom-20 -right-20 h-40 w-40 rounded-full bg-primary/5 blur-3xl" />

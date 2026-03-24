@@ -18,7 +18,7 @@ const securityFeatures = [
     icon: Eye,
     title: "Zero File Storage",
     description:
-      "Your files never leave Google&apos;s servers. We only read folder structure and metadata — nothing is cached.",
+      "Your files never leave Google\u2019s servers. We only read folder structure and metadata \u2014 nothing is cached.",
   },
   {
     icon: KeyRound,
@@ -30,7 +30,7 @@ const securityFeatures = [
     icon: RefreshCw,
     title: "Two-Step Authentication",
     description:
-      "Email + password or Google OAuth, combined with Google&apos;s own 2FA for maximum protection.",
+      "Email + password or Google OAuth, combined with Google\u2019s own 2FA for maximum protection.",
   },
   {
     icon: Trash2,
@@ -67,12 +67,12 @@ export function SecuritySection() {
             <div
               key={feat.title}
               className={cn(
-                "group relative overflow-hidden rounded-2xl border border-border/40 bg-card/80 backdrop-blur-sm p-7 transition-all duration-300",
-                "hover:border-emerald-500/30 hover:shadow-xl hover:shadow-black/[0.04] hover:-translate-y-0.5"
+                "group relative overflow-hidden rounded-2xl border border-border/50 bg-white dark:bg-card/80 backdrop-blur-sm p-7 shadow-sm shadow-black/[0.02] transition-all duration-300",
+                "hover:border-emerald-500/30 hover:shadow-lg hover:shadow-black/[0.06] hover:-translate-y-0.5"
               )}
             >
               {/* Subtle number watermark */}
-              <span className="absolute -right-2 -top-4 font-display text-7xl font-extrabold text-foreground/[0.02] select-none">
+              <span className="absolute -right-2 -top-4 font-display text-7xl font-extrabold text-foreground/[0.06] dark:text-foreground/[0.04] select-none">
                 {String(i + 1).padStart(2, "0")}
               </span>
 

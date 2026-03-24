@@ -131,10 +131,10 @@ export function PricingTiers() {
           <div
             key={tier.name}
             className={cn(
-              "relative flex flex-col rounded-2xl border bg-card p-6 text-left transition-all duration-300",
+              "relative flex flex-col rounded-2xl border bg-white dark:bg-card p-6 text-left transition-all duration-300",
               tier.highlighted
                 ? "border-2 border-primary/40 shadow-xl shadow-primary/5 lg:-my-2 lg:py-8"
-                : "border-border/60 hover:shadow-lg hover:shadow-black/[0.04]"
+                : "border-border/50 shadow-sm shadow-black/[0.02] hover:shadow-lg hover:shadow-black/[0.06]"
             )}
           >
             {/* Badge */}

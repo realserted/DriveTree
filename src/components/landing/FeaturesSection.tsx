@@ -33,7 +33,7 @@ const features = [
     icon: Shield,
     title: "Nothing Leaves Google",
     description:
-      "Your files stay on Google&apos;s servers. We only read folder structure and metadata — zero file storage on our end.",
+      "Your files stay on Google\u2019s servers. We only read folder structure and metadata \u2014 zero file storage on our end.",
     color: "text-emerald-500 dark:text-emerald-400",
     bg: "bg-emerald-500/10",
     border: "group-hover:border-emerald-500/30",
@@ -79,8 +79,8 @@ export function FeaturesSection() {
             <div
               key={feat.title}
               className={cn(
-                "group relative rounded-2xl border border-border/40 bg-card/80 backdrop-blur-sm p-7 transition-all duration-300",
-                "hover:shadow-xl hover:shadow-black/[0.04] hover:-translate-y-0.5",
+                "group relative rounded-2xl border border-border/50 bg-white dark:bg-card/80 backdrop-blur-sm p-7 shadow-sm shadow-black/[0.02] transition-all duration-300",
+                "hover:shadow-lg hover:shadow-black/[0.06] hover:-translate-y-0.5",
                 feat.border
               )}
             >

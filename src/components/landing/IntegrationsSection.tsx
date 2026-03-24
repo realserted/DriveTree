@@ -105,10 +105,10 @@ export function IntegrationsSection() {
               <div
                 key={provider.name}
                 className={cn(
-                  "group relative flex flex-col items-center gap-3 rounded-2xl border bg-card p-6 text-center transition-all duration-300",
+                  "group relative flex flex-col items-center gap-3 rounded-2xl border bg-white dark:bg-card p-6 text-center transition-all duration-300",
                   provider.status === "live"
                     ? "border-primary/30 shadow-md shadow-primary/5 hover:shadow-lg hover:shadow-primary/10"
-                    : "border-border/40 opacity-75 hover:opacity-100 hover:shadow-md"
+                    : "border-border/50 shadow-sm shadow-black/[0.02] opacity-75 hover:opacity-100 hover:shadow-md"
                 )}
               >
                 {provider.status === "live" && (
