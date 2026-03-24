@@ -17,6 +17,18 @@ export function DashboardSidebar() {
   async function handleSignOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
+
+    // Clear all cached data on sign out — nothing left for attackers
+    if (typeof window !== "undefined") {
+      sessionStorage.clear();
+      localStorage.removeItem("sb-wgwzgdglepjlqeolmcnf-auth-token");
+      // Revoke any blob URLs still in memory
+      if ("caches" in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      }
+    }
+
     router.push("/");
   }
 

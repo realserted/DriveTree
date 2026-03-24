@@ -196,3 +196,60 @@ export async function exportFile(
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 }
+
+export async function renameFile(
+  accessToken: string,
+  fileId: string,
+  newName: string
+): Promise<DriveFile> {
+  const res = await fetch(
+    `${DRIVE_API_BASE}/files/${fileId}?fields=${FILE_FIELDS}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name: newName }),
+    }
+  );
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `Rename failed: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+/** Fetch all files (paginated) for scanning. */
+export async function listAllFiles(
+  accessToken: string
+): Promise<DriveFile[]> {
+  const allFiles: DriveFile[] = [];
+  let pageToken: string | undefined;
+
+  do {
+    const params = new URLSearchParams({
+      q: "trashed=false and mimeType != 'application/vnd.google-apps.folder'",
+      fields: `nextPageToken,files(${FILE_FIELDS})`,
+      pageSize: "1000",
+    });
+    if (pageToken) params.set("pageToken", pageToken);
+
+    const res = await fetch(`${DRIVE_API_BASE}/files?${params}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `Drive API error: ${res.status}`);
+    }
+
+    const data = await res.json();
+    allFiles.push(...(data.files || []));
+    pageToken = data.nextPageToken;
+  } while (pageToken);
+
+  return allFiles;
+}

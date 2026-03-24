@@ -5,6 +5,7 @@ import { FileTreeDemo } from "@/components/landing/FileTreeDemo";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
 import { PricingPreview } from "@/components/landing/PricingPreview";
 import { CTASection } from "@/components/landing/CTASection";
+import { SecuritySection } from "@/components/landing/SecuritySection";
 
 export default function HomePage() {
   return (
@@ -14,6 +15,7 @@ export default function HomePage() {
         <HeroSection />
         <FeaturesSection />
         <FileTreeDemo />
+        <SecuritySection />
         <PricingPreview />
         <CTASection />
       </main>

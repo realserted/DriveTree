@@ -2,6 +2,7 @@ import {
   Home,
   HardDrive,
   FolderTree,
+  Copy,
   User,
   Settings,
   CreditCard,
@@ -25,6 +26,7 @@ export const dashboardNav: NavItem[] = [
   { label: "Home", href: "/dashboard", icon: Home },
   { label: "Connect Drives", href: "/dashboard", icon: HardDrive },
   { label: "File Tree Explorer", href: "/dashboard/drives", icon: FolderTree },
+  { label: "Duplicate Finder", href: "/dashboard/duplicates", icon: Copy },
   { label: "Profile", href: "/dashboard/profile", icon: User },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
