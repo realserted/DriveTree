@@ -32,7 +32,7 @@ import {
 } from "@/lib/drive-edit";
 import { CsvEditor } from "./CsvEditor";
 import { DocxEditor } from "./DocxEditor";
-import { PdfEditor } from "./PdfEditor";
+// PdfEditor no longer used — PDF editing uses google-iframe flow
 import type { DriveFile } from "@/types/drive";
 import {
   isGoogleDoc,
@@ -73,7 +73,7 @@ function isEditable(file: DriveFile): boolean {
   );
 }
 
-type EditMode = "none" | "csv" | "docx" | "google-iframe" | "pdf";
+type EditMode = "none" | "csv" | "docx" | "google-iframe";
 
 export function FileViewer({ file, onFileRenamed }: FileViewerProps) {
   const { content, blobUrl, previewType, loading, fetchPreview, clearContent } =
@@ -182,9 +182,14 @@ export function FileViewer({ file, onFileRenamed }: FileViewerProps) {
       return;
     }
 
-    // PDF: import to Google Docs for editing
+    // PDF: import to Google Docs, edit, auto-sync back on exit
     if (isPdf(file)) {
-      setEditMode("pdf");
+      const result = await importToGoogleFormat(file.id, file.mimeType, file.name);
+      if (result) {
+        setTempGoogleFileId(result.googleFileId);
+        setEditorUrl(result.editorUrl);
+        setEditMode("google-iframe");
+      }
       return;
     }
 
@@ -215,28 +220,19 @@ export function FileViewer({ file, onFileRenamed }: FileViewerProps) {
     [file]
   );
 
-  const handlePdfImport = useCallback(async () => {
-    if (!file) return null;
-    return importToGoogleFormat(file.id, file.mimeType, file.name);
-  }, [file]);
-
-  const handlePdfSync = useCallback(
-    async (googleDocId: string) => {
-      if (!file) return null;
-      return syncPdfEdit(file.id, googleDocId);
-    },
-    [file]
-  );
-
   const exitEditMode = useCallback(async () => {
-    // If there's a temp imported file (CSV/Office), sync changes back and delete it
+    // If there's a temp imported file (CSV/PDF/Office), sync changes back and delete it
     if (file && tempGoogleFileId) {
       setSyncing(true);
       try {
         if (isCsv(file)) {
           await syncCsvEdit(file.id, tempGoogleFileId);
+        } else if (isPdf(file)) {
+          await syncPdfEdit(file.id, tempGoogleFileId);
+        } else {
+          // For other imported types, just delete the temp file
+          await deleteTempFile(tempGoogleFileId).catch(() => {});
         }
-        // syncCsvEdit already deletes the temp file
       } catch {
         // If sync fails, still delete the temp file
         await deleteTempFile(tempGoogleFileId).catch(() => {});
@@ -314,21 +310,7 @@ export function FileViewer({ file, onFileRenamed }: FileViewerProps) {
     );
   }
 
-  // PDF editor (import → Google Docs → export back)
-  if (editMode === "pdf") {
-    return (
-      <div className="flex h-full flex-col">
-        <PdfEditor
-          fileId={file.id}
-          fileName={displayName}
-          mimeType={file.mimeType}
-          onImport={handlePdfImport}
-          onSync={handlePdfSync}
-          blobUrl={blobUrl}
-        />
-      </div>
-    );
-  }
+  // PDF edit mode is now handled by google-iframe above
 
   // ── Render: preview mode ─────────────────────────────────────
   return (
