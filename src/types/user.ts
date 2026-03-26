@@ -14,6 +14,8 @@ export interface ConnectedDrive {
   is_active: boolean;
   connected_at: string;
   last_synced_at: string | null;
+  root_folder_id: string | null;
+  root_folder_name: string | null;
 }
 
 export interface Subscription {

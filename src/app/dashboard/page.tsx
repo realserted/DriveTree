@@ -19,7 +19,7 @@ export default function DashboardPage() {
 
     supabase
       .from("drivetree_connected_drives")
-      .select("id, user_id, google_email, is_active, connected_at, last_synced_at")
+      .select("id, user_id, google_email, is_active, connected_at, last_synced_at, root_folder_id, root_folder_name")
       .eq("user_id", user.id)
       .then(({ data }) => {
         setDrives((data as ConnectedDrive[]) || []);
@@ -47,7 +47,18 @@ export default function DashboardPage() {
           <LoadingSpinner className="py-12" text="Loading drives..." />
         ) : (
           <>
-            <DriveList drives={drives} onDisconnect={handleDisconnect} />
+            <DriveList
+              drives={drives}
+              onDisconnect={handleDisconnect}
+              onDriveUpdated={() => {
+                const supabase = createClient();
+                supabase
+                  .from("drivetree_connected_drives")
+                  .select("id, user_id, google_email, is_active, connected_at, last_synced_at, root_folder_id, root_folder_name")
+                  .eq("user_id", user!.id)
+                  .then(({ data }) => setDrives((data as ConnectedDrive[]) || []));
+              }}
+            />
             {drives.length === 0 && <ConnectDriveCard />}
           </>
         )}

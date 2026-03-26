@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import type { DriveFile, FileTreeNode } from "@/types/drive";
 import { GOOGLE_FOLDER_MIME } from "@/types/drive";
 
-export function useDriveFiles() {
+export function useDriveFiles(rootFolderId?: string | null) {
   const [tree, setTree] = useState<FileTreeNode[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,8 +27,9 @@ export function useDriveFiles() {
   const loadRoot = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setTree([]);
     try {
-      const files = await fetchChildren("root");
+      const files = await fetchChildren(rootFolderId || "root");
       const nodes: FileTreeNode[] = files.map((file) => ({
         file,
         children: [],
@@ -41,7 +42,7 @@ export function useDriveFiles() {
     } finally {
       setLoading(false);
     }
-  }, [fetchChildren]);
+  }, [fetchChildren, rootFolderId]);
 
   const toggleFolder = useCallback(
     async (nodeId: string) => {
