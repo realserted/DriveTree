@@ -57,6 +57,21 @@ export function isPdf(file: DriveFile): boolean {
   return file.mimeType === "application/pdf";
 }
 
+export function isCsv(file: DriveFile): boolean {
+  return (
+    file.mimeType === "text/csv" ||
+    file.name.toLowerCase().endsWith(".csv")
+  );
+}
+
+export function isWordDoc(file: DriveFile): boolean {
+  return (
+    file.mimeType ===
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+    file.mimeType === "application/msword"
+  );
+}
+
 export function isText(file: DriveFile): boolean {
   const textTypes = [
     "text/plain",

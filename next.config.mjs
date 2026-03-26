@@ -25,7 +25,7 @@ const nextConfig = {
               "font-src 'self'",
               "connect-src 'self' https://*.supabase.co https://www.googleapis.com",
               "media-src 'self' blob:",
-              "frame-src 'self' blob:",
+              "frame-src 'self' blob: https://docs.google.com https://drive.google.com",
             ].join("; "),
           },
         ],

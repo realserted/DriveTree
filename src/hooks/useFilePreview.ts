@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from "react";
 import mammoth from "mammoth";
 import type { DriveFile } from "@/types/drive";
-import { isText, isGoogleDoc, isPdf, isImage, isOfficeDoc, isVideo } from "@/types/drive";
+import { isText, isGoogleDoc, isPdf, isImage, isOfficeDoc, isVideo, isCsv, GOOGLE_SHEET_MIME } from "@/types/drive";
 
 export type PreviewType = "text" | "html" | "pdf" | "image" | "video" | "iframe" | null;
 
@@ -64,6 +64,12 @@ export function useFilePreview() {
         return;
       }
 
+      // Google Sheets & CSV — use iframe embed, no content fetch needed
+      if (file.mimeType === GOOGLE_SHEET_MIME || isCsv(file)) {
+        setPreviewType("iframe");
+        return;
+      }
+
       // Video — fetch blob and use <video> tag
       if (isVideo(file)) {
         const url = `/api/drive/files/${file.id}/content?mimeType=${encodeURIComponent(file.mimeType)}`;
@@ -77,8 +83,8 @@ export function useFilePreview() {
         return;
       }
 
-      const url = `/api/drive/files/${file.id}/content?mimeType=${encodeURIComponent(file.mimeType)}`;
-      const res = await fetch(url);
+      const url = `/api/drive/files/${file.id}/content?mimeType=${encodeURIComponent(file.mimeType)}&t=${Date.now()}`;
+      const res = await fetch(url, { cache: "no-store" });
 
       if (!res.ok) {
         setContent(null);
@@ -107,7 +113,7 @@ export function useFilePreview() {
         blobUrlRef.current = objectUrl;
         setBlobUrl(objectUrl);
         setPreviewType("image");
-      } else if (isText(file)) {
+      } else if (isText(file) || isCsv(file)) {
         const text = await res.text();
         setContent(text);
         setPreviewType("text");

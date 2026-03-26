@@ -8,9 +8,12 @@ import {
   Download,
   Eye,
   Pencil,
+  PenLine,
   Sparkles,
   Check,
   X,
+  Save,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/primitives";
@@ -18,8 +21,30 @@ import { ScrollArea } from "@/components/ui/primitives";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { useFilePreview } from "@/hooks/useFilePreview";
 import { formatBytes, formatDate, generateSmartName } from "@/lib/utils";
+import {
+  updateFileContent,
+  updateDocx,
+  importToGoogleFormat,
+  syncPdfEdit,
+  syncCsvEdit,
+  deleteTempFile,
+  getGoogleEditorUrl,
+} from "@/lib/drive-edit";
+import { CsvEditor } from "./CsvEditor";
+import { DocxEditor } from "./DocxEditor";
+import { PdfEditor } from "./PdfEditor";
 import type { DriveFile } from "@/types/drive";
-import { isGoogleDoc, isImage, isPdf, isText, isOfficeDoc, isVideo } from "@/types/drive";
+import {
+  isGoogleDoc,
+  isImage,
+  isPdf,
+  isText,
+  isOfficeDoc,
+  isVideo,
+  isCsv,
+  isWordDoc,
+  GOOGLE_SHEET_MIME,
+} from "@/types/drive";
 
 interface FileViewerProps {
   file: DriveFile | null;
@@ -27,8 +52,28 @@ interface FileViewerProps {
 }
 
 function isPreviewable(file: DriveFile): boolean {
-  return isGoogleDoc(file) || isOfficeDoc(file) || isPdf(file) || isImage(file) || isText(file) || isVideo(file);
+  return (
+    isGoogleDoc(file) ||
+    isOfficeDoc(file) ||
+    isPdf(file) ||
+    isImage(file) ||
+    isText(file) ||
+    isVideo(file) ||
+    isCsv(file)
+  );
 }
+
+function isEditable(file: DriveFile): boolean {
+  return (
+    isGoogleDoc(file) ||
+    isCsv(file) ||
+    isWordDoc(file) ||
+    isPdf(file) ||
+    isOfficeDoc(file)
+  );
+}
+
+type EditMode = "none" | "csv" | "docx" | "google-iframe" | "pdf";
 
 export function FileViewer({ file, onFileRenamed }: FileViewerProps) {
   const { content, blobUrl, previewType, loading, fetchPreview, clearContent } =
@@ -39,6 +84,13 @@ export function FileViewer({ file, onFileRenamed }: FileViewerProps) {
   const [renameSaving, setRenameSaving] = useState(false);
   const [displayName, setDisplayName] = useState(file?.name ?? "");
 
+  // Edit state
+  const [editMode, setEditMode] = useState<EditMode>("none");
+  const [editorUrl, setEditorUrl] = useState<string | null>(null);
+  const [tempGoogleFileId, setTempGoogleFileId] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [csvContent, setCsvContent] = useState<string | null>(null);
+
   const sanitizedHtml = useMemo(
     () => (content ? DOMPurify.sanitize(content) : ""),
     [content]
@@ -48,6 +100,8 @@ export function FileViewer({ file, onFileRenamed }: FileViewerProps) {
   useEffect(() => {
     clearContent();
     setIsRenaming(false);
+    setEditMode("none");
+    setEditorUrl(null);
     setDisplayName(file?.name ?? "");
     if (file && isPreviewable(file)) {
       fetchPreview(file);
@@ -55,6 +109,7 @@ export function FileViewer({ file, onFileRenamed }: FileViewerProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fileId]);
 
+  // ── Rename handlers ──────────────────────────────────────────
   const startRename = useCallback(() => {
     if (!file) return;
     setRenameValue(displayName);
@@ -89,12 +144,118 @@ export function FileViewer({ file, onFileRenamed }: FileViewerProps) {
       setIsRenaming(false);
       onFileRenamed?.(updated);
     } catch {
-      // keep the input open so user can retry
+      // keep input open for retry
     } finally {
       setRenameSaving(false);
     }
   }, [file, renameValue, displayName, cancelRename, onFileRenamed]);
 
+  // ── Edit handlers ────────────────────────────────────────────
+  const handleStartEdit = useCallback(async () => {
+    if (!file) return;
+
+    // Google native docs (Docs, Sheets, Slides): open Google editor in iframe
+    // Must check before isCsv/isWordDoc since Google-native files may have .csv/.doc names
+    if (isGoogleDoc(file)) {
+      const url = getGoogleEditorUrl(file.id, file.mimeType);
+      if (url) {
+        setEditorUrl(url);
+        setEditMode("google-iframe");
+      }
+      return;
+    }
+
+    // CSV: import to Google Sheets, edit, sync back, auto-delete temp on save or cancel
+    if (isCsv(file)) {
+      const result = await importToGoogleFormat(file.id, file.mimeType, file.name);
+      if (result) {
+        setTempGoogleFileId(result.googleFileId);
+        setEditorUrl(result.editorUrl);
+        setEditMode("google-iframe");
+      }
+      return;
+    }
+
+    // DOCX: inline rich text editor
+    if (isWordDoc(file)) {
+      setEditMode("docx");
+      return;
+    }
+
+    // PDF: import to Google Docs for editing
+    if (isPdf(file)) {
+      setEditMode("pdf");
+      return;
+    }
+
+    // Office files (xlsx, pptx): import to Google format
+    if (isOfficeDoc(file)) {
+      const result = await importToGoogleFormat(file.id, file.mimeType, file.name);
+      if (result) {
+        setTempGoogleFileId(result.googleFileId);
+        setEditorUrl(result.editorUrl);
+        setEditMode("google-iframe");
+      }
+    }
+  }, [file]);
+
+  const handleCsvSave = useCallback(
+    async (csvContent: string) => {
+      if (!file) return { ok: false, error: "No file" };
+      return updateFileContent(file.id, csvContent, "text/csv");
+    },
+    [file]
+  );
+
+  const handleDocxSave = useCallback(
+    async (html: string) => {
+      if (!file) return { ok: false, error: "No file" };
+      return updateDocx(file.id, html);
+    },
+    [file]
+  );
+
+  const handlePdfImport = useCallback(async () => {
+    if (!file) return null;
+    return importToGoogleFormat(file.id, file.mimeType, file.name);
+  }, [file]);
+
+  const handlePdfSync = useCallback(
+    async (googleDocId: string) => {
+      if (!file) return null;
+      return syncPdfEdit(file.id, googleDocId);
+    },
+    [file]
+  );
+
+  const exitEditMode = useCallback(async () => {
+    // If there's a temp imported file (CSV/Office), sync changes back and delete it
+    if (file && tempGoogleFileId) {
+      setSyncing(true);
+      try {
+        if (isCsv(file)) {
+          await syncCsvEdit(file.id, tempGoogleFileId);
+        }
+        // syncCsvEdit already deletes the temp file
+      } catch {
+        // If sync fails, still delete the temp file
+        await deleteTempFile(tempGoogleFileId).catch(() => {});
+      } finally {
+        setSyncing(false);
+      }
+    }
+    setEditMode("none");
+    setEditorUrl(null);
+    setTempGoogleFileId(null);
+    setCsvContent(null);
+    // Re-fetch preview after a short delay so Google propagates the changes
+    if (file && isPreviewable(file)) {
+      clearContent();
+      setTimeout(() => fetchPreview(file), 1500);
+    }
+  }, [file, tempGoogleFileId, clearContent, fetchPreview]);
+
+  // ── Render: no file selected ─────────────────────────────────
   if (!file) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
@@ -108,6 +269,68 @@ export function FileViewer({ file, onFileRenamed }: FileViewerProps) {
     );
   }
 
+  // ── Render: edit modes ───────────────────────────────────────
+
+  // CSV editor
+  if (editMode === "csv" && (csvContent || content)) {
+    return (
+      <div className="flex h-full flex-col">
+        <EditBar fileName={displayName} onExit={exitEditMode} />
+        <div className="flex-1 overflow-hidden">
+          <CsvEditor initialContent={csvContent || content || ""} onSave={handleCsvSave} />
+        </div>
+      </div>
+    );
+  }
+
+  // DOCX editor
+  if (editMode === "docx" && sanitizedHtml) {
+    return (
+      <div className="flex h-full flex-col">
+        <EditBar fileName={displayName} onExit={exitEditMode} />
+        <div className="flex-1 overflow-hidden">
+          <DocxEditor initialHtml={sanitizedHtml} onSave={handleDocxSave} />
+        </div>
+      </div>
+    );
+  }
+
+  // Google editor iframe (native Google docs + imported CSV/Office files)
+  if (editMode === "google-iframe" && editorUrl) {
+    return (
+      <div className="flex h-full flex-col">
+        <EditBar
+          fileName={displayName}
+          onExit={exitEditMode}
+          editorUrl={editorUrl}
+          syncing={syncing}
+        />
+        <iframe
+          src={editorUrl}
+          className="flex-1 w-full border-0"
+          title={`Editing ${displayName}`}
+        />
+      </div>
+    );
+  }
+
+  // PDF editor (import → Google Docs → export back)
+  if (editMode === "pdf") {
+    return (
+      <div className="flex h-full flex-col">
+        <PdfEditor
+          fileId={file.id}
+          fileName={displayName}
+          mimeType={file.mimeType}
+          onImport={handlePdfImport}
+          onSync={handlePdfSync}
+          blobUrl={blobUrl}
+        />
+      </div>
+    );
+  }
+
+  // ── Render: preview mode ─────────────────────────────────────
   return (
     <div className="flex h-full flex-col">
       {/* File info bar */}
@@ -134,7 +357,7 @@ export function FileViewer({ file, onFileRenamed }: FileViewerProps) {
                 <span className="text-xs text-muted-foreground">
                   {formatBytes(file.size)}
                 </span>
-                <span className="text-xs text-muted-foreground">·</span>
+                <span className="text-xs text-muted-foreground">&middot;</span>
                 <span className="text-xs text-muted-foreground">
                   {formatDate(file.modifiedTime)}
                 </span>
@@ -146,6 +369,17 @@ export function FileViewer({ file, onFileRenamed }: FileViewerProps) {
           </div>
 
           <div className="flex items-center gap-1.5">
+            {isEditable(file) && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={handleStartEdit}
+              >
+                <PenLine className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Edit</span>
+              </Button>
+            )}
             {file.webContentLink && (
               <Button asChild variant="ghost" size="sm" className="gap-1.5">
                 <a
@@ -228,7 +462,6 @@ export function FileViewer({ file, onFileRenamed }: FileViewerProps) {
         {loading ? (
           <LoadingSpinner className="py-12" text="Loading preview..." />
         ) : previewType === "html" && content ? (
-          /* Google Docs/Sheets/Slides exported as HTML */
           <ScrollArea className="h-full bg-white">
             <div
               className="prose prose-sm max-w-none p-6 text-black [&_a]:text-blue-600"
@@ -236,14 +469,12 @@ export function FileViewer({ file, onFileRenamed }: FileViewerProps) {
             />
           </ScrollArea>
         ) : previewType === "pdf" && blobUrl ? (
-          /* PDF rendered from blob */
           <iframe
             src={blobUrl}
             className="h-full w-full border-0"
             title={file.name}
           />
         ) : previewType === "image" && blobUrl ? (
-          /* Images rendered from blob */
           <div className="flex h-full items-center justify-center bg-muted/20 p-8">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -253,7 +484,6 @@ export function FileViewer({ file, onFileRenamed }: FileViewerProps) {
             />
           </div>
         ) : previewType === "video" && blobUrl ? (
-          /* Video rendered from blob */
           <div className="flex h-full items-center justify-center bg-black p-4">
             <video
               src={blobUrl}
@@ -264,14 +494,22 @@ export function FileViewer({ file, onFileRenamed }: FileViewerProps) {
             </video>
           </div>
         ) : previewType === "text" && content ? (
-          /* Text/code files */
           <ScrollArea className="h-full">
             <pre className="whitespace-pre-wrap p-4 font-mono text-sm text-foreground">
               {content}
             </pre>
           </ScrollArea>
+        ) : previewType === "iframe" && file ? (
+          <iframe
+            src={
+              file.mimeType === GOOGLE_SHEET_MIME
+                ? `https://docs.google.com/spreadsheets/d/${file.id}/preview`
+                : `https://drive.google.com/file/d/${file.id}/preview`
+            }
+            className="h-full w-full border-0"
+            title={file.name}
+          />
         ) : (
-          /* Unsupported format */
           <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
             <div className="rounded-2xl bg-muted/50 p-4">
               <FileText className="h-8 w-8 text-muted-foreground/50" />
@@ -299,6 +537,47 @@ export function FileViewer({ file, onFileRenamed }: FileViewerProps) {
             )}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+/** Shared bar shown during edit mode with file name and exit button */
+function EditBar({
+  fileName,
+  onExit,
+  editorUrl,
+  syncing,
+}: {
+  fileName: string;
+  onExit: () => void;
+  editorUrl?: string;
+  syncing?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between border-b border-border/40 px-4 py-2.5 bg-muted/20">
+      <div className="flex items-center gap-2">
+        <PenLine className="h-4 w-4 text-primary" />
+        <span className="text-sm font-medium text-foreground">
+          Editing: {fileName}
+        </span>
+      </div>
+      <div className="flex items-center gap-2">
+        {editorUrl && (
+          <a
+            href={editorUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ExternalLink className="h-3 w-3" />
+            Open in new tab
+          </a>
+        )}
+        <Button variant="ghost" size="sm" onClick={onExit} disabled={syncing} className="text-xs">
+          {syncing ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <X className="h-3.5 w-3.5 mr-1" />}
+          {syncing ? "Saving..." : "Exit Edit"}
+        </Button>
       </div>
     </div>
   );

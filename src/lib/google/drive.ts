@@ -90,7 +90,6 @@ export function getExportMimeType(
   googleMimeType: string
 ): string | null {
   const exportMap: Record<string, string> = {
-    // Google Workspace → HTML
     "application/vnd.google-apps.document": "text/html",
     "application/vnd.google-apps.spreadsheet": "text/html",
     "application/vnd.google-apps.presentation": "text/html",

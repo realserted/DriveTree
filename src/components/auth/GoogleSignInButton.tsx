@@ -16,7 +16,7 @@ export function GoogleSignInButton() {
       provider: "google",
       options: {
         redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth/callback`,
-        scopes: "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/presentations.readonly",
+        scopes: "https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/presentations.readonly",
         queryParams: {
           access_type: "offline",
           prompt: "consent",
